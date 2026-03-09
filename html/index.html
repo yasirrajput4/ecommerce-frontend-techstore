@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TechStore - Premium Electronics & Innovation</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <nav>
+          <div class="logo">TechStore</div>
+          <button class="mobile-menu-btn">☰</button>
+          <div class="search-container">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search products..."
+              class="search-input"
+            />
+            <button class="search-button">🔍</button>
+          </div>
+          <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#products">Products</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#testimonials">Reviews</a></li>
+            <li>
+              <button class="cart-icon">
+                🛒 Cart
+                <span class="cart-count" id="cartCount">0</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </header>
+
+      <section class="hero" id="home">
+        <h1>Premium Electronics Store</h1>
+        <p>
+          Discover cutting-edge technology with unbeatable prices, premium
+          quality, and exceptional customer service. Your tech journey starts
+          here.
+        </p>
+        <a href="#products" class="cta-button">Shop Now</a>
+      </section>
+
+      <section class="stats-section">
+        <div class="stat-card">
+          <span class="stat-number">50K+</span>
+          <div class="stat-label">Happy Customers</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">1000+</span>
+          <div class="stat-label">Products</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">24/7</span>
+          <div class="stat-label">Support</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">99%</span>
+          <div class="stat-label">Satisfaction</div>
+        </div>
+      </section>
+
+      <section class="features-section" id="features">
+        <h2 class="section-title">Why Choose TechStore?</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <span class="feature-icon">🚚</span>
+            <h3 class="feature-title">Free Shipping</h3>
+            <p class="feature-description">
+              Free delivery on all orders over $50. Fast and reliable shipping
+              worldwide with tracking.
+            </p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">🔒</span>
+            <h3 class="feature-title">Secure Payment</h3>
+            <p class="feature-description">
+              Your transactions are protected with bank-level security and
+              encryption technology.
+            </p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">↩️</span>
+            <h3 class="feature-title">Easy Returns</h3>
+            <p class="feature-description">
+              30-day hassle-free returns. Not satisfied? Get your money back, no
+              questions asked.
+            </p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">🏆</span>
+            <h3 class="feature-title">Premium Quality</h3>
+            <p class="feature-description">
+              Only authentic products from trusted brands with manufacturer
+              warranty included.
+            </p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">💬</span>
+            <h3 class="feature-title">24/7 Support</h3>
+            <p class="feature-description">
+              Round-the-clock customer support via chat, email, or phone. We're
+              here to help!
+            </p>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">⚡</span>
+            <h3 class="feature-title">Fast Delivery</h3>
+            <p class="feature-description">
+              Same-day delivery available in major cities. Get your tech gear
+              when you need it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="products-section" id="products">
+        <h2 class="section-title">Featured Products</h2>
+
+        <div class="filter-tabs">
+          <div class="filter-tab active" onclick="filterProducts('all')">
+            All Products
+          </div>
+          <div class="filter-tab" onclick="filterProducts('mobile')">
+            Smartphones
+          </div>
+          <div class="filter-tab" onclick="filterProducts('audio')">Audio</div>
+          <div class="filter-tab" onclick="filterProducts('computing')">
+            Computing
+          </div>
+          <div class="filter-tab" onclick="filterProducts('accessories')">
+            Accessories
+          </div>
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+          <!-- Products will be dynamically loaded here -->
+        </div>
+      </section>
+
+      <section class="testimonials-section" id="testimonials">
+        <h2 class="section-title">What Our Customers Say</h2>
+        <div class="testimonials-grid">
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "Amazing quality products and lightning-fast delivery! The
+              customer service team went above and beyond to help me choose the
+              perfect laptop."
+            </p>
+            <div class="testimonial-author">Sarah Johnson</div>
+            <div class="testimonial-role">Software Developer</div>
+          </div>
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "Best tech store I've ever used. Great prices, authentic products,
+              and the return policy is fantastic. Highly recommended!"
+            </p>
+            <div class="testimonial-author">Mike Chen</div>
+            <div class="testimonial-role">Digital Marketer</div>
+          </div>
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "The website is so easy to use and the product descriptions are
+              detailed. Got my gaming setup here and couldn't be happier!"
+            </p>
+            <div class="testimonial-author">Alex Rivera</div>
+            <div class="testimonial-role">Content Creator</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="newsletter-section">
+        <h2>Stay Updated with Latest Tech</h2>
+        <p>
+          Subscribe to our newsletter for exclusive deals, new product launches,
+          and tech tips.
+        </p>
+        <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+          <input
+            type="email"
+            class="newsletter-input"
+            placeholder="Enter your email address"
+            required
+          />
+          <button type="submit" class="newsletter-button">Subscribe</button>
+        </form>
+      </section>
+
+      <section class="content-section" id="content">
+        <h2 class="section-title">Why Choose TechStore?</h2>
+        <div class="content-grid">
+          <div class="content-card">
+            <div class="content-icon">🚀</div>
+            <h3 class="content-title">Cutting-Edge Technology</h3>
+            <p class="content-text">
+              Stay ahead with the latest tech innovations. We carefully curate
+              our product selection to bring you the most advanced and reliable
+              technology available.
+            </p>
+            <a href="#products" class="content-link">
+              Explore Products
+              <span>→</span>
+            </a>
+          </div>
+
+          <div class="content-card">
+            <div class="content-icon">💎</div>
+            <h3 class="content-title">Premium Quality</h3>
+            <p class="content-text">
+              Every product in our store meets our strict quality standards. We
+              partner with leading brands to ensure you get the best value for
+              your investment.
+            </p>
+            <a href="#features" class="content-link">
+              Learn More
+              <span>→</span>
+            </a>
+          </div>
+
+          <div class="content-card">
+            <div class="content-icon">🛡️</div>
+            <h3 class="content-title">Secure Shopping</h3>
+            <p class="content-text">
+              Shop with confidence knowing your data is protected. We use
+              industry-leading security measures to ensure your information
+              stays safe.
+            </p>
+            <a href="#security" class="content-link">
+              Security Details
+              <span>→</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="content-stats">
+          <div class="content-stat">
+            <div class="content-stat-number">24/7</div>
+            <div class="content-stat-label">Customer Support</div>
+          </div>
+          <div class="content-stat">
+            <div class="content-stat-number">30 Days</div>
+            <div class="content-stat-label">Easy Returns</div>
+          </div>
+          <div class="content-stat">
+            <div class="content-stat-number">100%</div>
+            <div class="content-stat-label">Authentic Products</div>
+          </div>
+          <div class="content-stat">
+            <div class="content-stat-number">Free</div>
+            <div class="content-stat-label">Express Shipping</div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="footer-content">
+          <div class="footer-section">
+            <h4>Shop</h4>
+            <a href="#products">All Products</a>
+            <a href="#products">Smartphones</a>
+            <a href="#products">Laptops</a>
+            <a href="#products">Accessories</a>
+            <a href="#products">Audio</a>
+          </div>
+          <div class="footer-section">
+            <h4>Support</h4>
+            <a href="#support">Help Center</a>
+            <a href="#shipping">Shipping Info</a>
+            <a href="#returns">Returns</a>
+            <a href="#warranty">Warranty</a>
+          </div>
+          <div class="footer-section">
+            <h4>Company</h4>
+            <a href="#about">About Us</a>
+            <a href="#careers">Careers</a>
+            <a href="#news">News</a>
+            <a href="#investors">Investors</a>
+            <a href="#sustainability">Sustainability</a>
+          </div>
+          <div class="footer-section">
+            <h4>Connect</h4>
+            <a href="#social">Facebook</a>
+            <a href="#social">Twitter</a>
+            <a href="#social">Instagram</a>
+            <a href="#social">YouTube</a>
+            <a href="#social">LinkedIn</a>
+          </div>
+        </div>
+        <p>
+          &copy; 2025 TechStore. All rights reserved. | Premium Electronics &
+          Technology
+        </p>
+      </footer>
+    </div>
+
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+      <div class="cart-header">
+        <h2 class="cart-title">Your Cart</h2>
+        <button class="close-cart">×</button>
+      </div>
+      <div id="cartItems"></div>
+      <div class="cart-total">
+        <div class="total-amount">Total: $<span id="cartTotal">0.00</span></div>
+        <button class="checkout-btn">Proceed to Checkout</button>
+      </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <script src="../js/app.js"></script>
+  </body>
+</html>
