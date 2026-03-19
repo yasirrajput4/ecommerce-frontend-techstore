@@ -1,4 +1,4 @@
-// Update product data with icons
+// ── Product data ────────────────────────────────────────────────
 const products = [
   {
     id: 1,
@@ -68,638 +68,531 @@ const products = [
   },
 ];
 
-// Cart state
+// ── Global state ─────────────────────────────────────────────────
 let cart = [];
 let currentCategory = "all";
+let notificationTimeout = null;
 
-// Initialize the page
+// ── Boot ─────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   renderProducts();
   updateCartCount();
   initializeSearch();
+  initNewsletter();
 
-  // Cart icon opens cart
+  // Cart controls
   const cartIcon = document.querySelector(".cart-icon");
-  if (cartIcon) cartIcon.addEventListener("click", toggleCart);
-
-  // Close cart button
-  const closeCartBtn = document.querySelector(".close-cart");
-  if (closeCartBtn) closeCartBtn.addEventListener("click", toggleCart);
-
-  // Cart overlay closes cart
+  const closeCart = document.querySelector(".close-cart");
   const cartOverlay = document.getElementById("cartOverlay");
+
+  if (cartIcon) cartIcon.addEventListener("click", toggleCart);
+  if (closeCart) closeCart.addEventListener("click", toggleCart);
   if (cartOverlay) cartOverlay.addEventListener("click", toggleCart);
 
-  // Mobile menu button
-  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
-  if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", toggleMobileMenu);
+  // Checkout button
+  attachCheckoutListener();
 
-  // Mobile menu overlay
+  // Mobile menu
+  const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
   const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
+
+  if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", toggleMobileMenu);
   if (mobileMenuOverlay)
     mobileMenuOverlay.addEventListener("click", toggleMobileMenu);
 
-  // Filter tabs
+  // Filter tabs — read data-category, no text parsing
+
   document.querySelectorAll(".filter-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
-      const text = tab.textContent.trim().toLowerCase();
-      if (text.includes("all")) filterProducts("all");
-      else if (text.includes("smartphone")) filterProducts("mobile");
-      else if (text.includes("audio")) filterProducts("audio");
-      else if (text.includes("computing")) filterProducts("computing");
-      else if (text.includes("accessories")) filterProducts("accessories");
+      const category = tab.dataset.category;
+      if (category) filterProducts(category);
     });
   });
 
-  // Checkout button (re-add listener after DOM changes)
-  function attachCheckoutListener() {
-    const checkoutBtn = document.querySelector(".checkout-btn");
-    if (checkoutBtn) {
-      checkoutBtn.removeEventListener("click", checkout); // prevent duplicate
-      checkoutBtn.addEventListener("click", checkout);
-    }
-  }
-  attachCheckoutListener();
-  // Also call after cart update
-  const origUpdateCart = updateCart;
-  updateCart = async function () {
-    await origUpdateCart.apply(this, arguments);
-    attachCheckoutListener();
-  };
-
-  // Add smooth scrolling to navigation links
+  // Smooth scroll for nav links
   document.querySelectorAll(".nav-links a").forEach((link) => {
     link.addEventListener("click", function (e) {
       e.preventDefault();
 
-      const targetId = this.getAttribute("href").substring(1);
-      const targetElement = document.getElementById(targetId);
+      const targetId = this.getAttribute("href").slice(1);
+      const targetEl = document.getElementById(targetId);
+      if (!targetEl) return;
 
-      if (targetElement) {
-        // Close mobile menu if open
-        const navLinks = document.querySelector(".nav-links");
-        const overlay = document.getElementById("mobileMenuOverlay");
-        if (navLinks && navLinks.classList.contains("active")) {
-          navLinks.classList.remove("active");
-          if (overlay) overlay.classList.remove("active");
-          updateScrollLock();
-        }
+      // Close mobile menu if open
+      closeMobileMenu();
 
-        // Calculate header height for offset
-        const header = document.querySelector("header");
-        const headerHeight = header ? header.offsetHeight : 0;
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.offsetHeight : 0;
+      const targetTop =
+        targetEl.getBoundingClientRect().top +
+        window.pageYOffset -
+        headerHeight;
 
-        // Get the target position
-        const targetPosition =
-          targetElement.getBoundingClientRect().top +
-          window.pageYOffset -
-          headerHeight;
+      window.scrollTo({ top: targetTop, behavior: "smooth" });
 
-        // Smooth scroll to target
-        window.scrollTo({
-          top: targetPosition,
-          behavior: "smooth",
-        });
-
-        // Update active link
-        document
-          .querySelectorAll(".nav-links a")
-          .forEach((a) => a.classList.remove("active"));
-        this.classList.add("active");
-      }
+      // Mark active link
+      document
+        .querySelectorAll(".nav-links a")
+        .forEach((a) => a.classList.remove("active"));
+      this.classList.add("active");
     });
   });
 
-  // Add intersection observer for section animations
+  // Intersection observer — fade sections in once, then stop observing
   const observer = new IntersectionObserver(
-    (entries) => {
+    (entries, obs) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("visible");
+          obs.unobserve(entry.target);
         }
       });
     },
-    {
-      threshold: 0.1,
-    }
+    { threshold: 0.1 },
   );
 
-  // Observe all sections
-  document.querySelectorAll("section").forEach((section) => {
-    observer.observe(section);
-  });
+  document.querySelectorAll("section").forEach((s) => observer.observe(s));
 
-  // Add debounced scroll handler for active link updates
-  const debouncedScroll = debounce(() => {
-    const sections = document.querySelectorAll("section[id]");
-    const scrollPosition = window.pageYOffset;
-    const header = document.querySelector("header");
-    const headerHeight = header ? header.offsetHeight : 0;
+  // Scroll → update active nav link (debounced)
+  window.addEventListener("scroll", debounce(updateActiveNavLink, 100));
 
-    sections.forEach((section) => {
-      const sectionTop = section.offsetTop - headerHeight;
-      const sectionHeight = section.offsetHeight;
-      const sectionId = section.getAttribute("id");
-
-      if (
-        scrollPosition >= sectionTop &&
-        scrollPosition < sectionTop + sectionHeight
-      ) {
-        document.querySelectorAll(".nav-links a").forEach((link) => {
-          link.classList.remove("active");
-          if (link.getAttribute("href") === `#${sectionId}`) {
-            link.classList.add("active");
-          }
-        });
-      }
-    });
-  }, 100);
-
-  window.addEventListener("scroll", debouncedScroll);
-
-  // Prevent cart from closing when clicking inside the cart sidebar
+  // Prevent cart from closing on click inside sidebar
   const cartSidebar = document.getElementById("cartSidebar");
   if (cartSidebar) {
-    cartSidebar.addEventListener("click", function (e) {
-      e.stopPropagation();
-    });
+    cartSidebar.addEventListener("click", (e) => e.stopPropagation());
   }
 
-  // Call globalScrollLockFallback on window resize and orientation change
-  window.addEventListener("resize", globalScrollLockFallback);
-  window.addEventListener("orientationchange", globalScrollLockFallback);
+  // Restore scroll lock state after resize / orientation change
+  window.addEventListener("resize", debounce(syncScrollLock, 100));
+  window.addEventListener("orientationchange", debounce(syncScrollLock, 200));
 });
 
-// Render products based on category
+// ── Render products ───────────────────────────────────────────────
 function renderProducts() {
-  try {
-    const productsGrid = document.getElementById("productsGrid");
-    if (!productsGrid) {
-      console.error("Products grid element not found");
-      return;
-    }
+  const grid = document.getElementById("productsGrid");
+  if (!grid) return;
 
-    const filteredProducts =
-      currentCategory === "all"
-        ? products
-        : products.filter((p) => p.category === currentCategory);
+  const filtered =
+    currentCategory === "all"
+      ? products
+      : products.filter((p) => p.category === currentCategory);
 
-    if (filteredProducts.length === 0) {
-      productsGrid.innerHTML =
-        '<div class="empty-cart">No products found in this category</div>';
-      return;
-    }
-
-    productsGrid.innerHTML = filteredProducts
-      .map(
-        (product) => `
-            <div class="product-card" data-product-id="${product.id}">
-              ${
-                product.badge
-                  ? `<div class="product-badge">${product.badge}</div>`
-                  : ""
-              }
-              <div class="product-image">
-                <i class="${product.icon}"></i>
-              </div>
-              <div class="product-info">
-                <h3 class="product-name">${product.name}</h3>
-                <p class="product-description">${product.description}</p>
-                <div class="product-rating" role="img" aria-label="Rating: ${
-                  product.rating
-                } out of 5">
-                  <span class="stars">${"★".repeat(
-                    Math.floor(product.rating)
-                  )}${product.rating % 1 ? "½" : ""}</span>
-                  <span class="rating-text">(${product.reviews} reviews)</span>
-                </div>
-                <div class="product-price">
-                  $${product.price.toFixed(2)}
-                </div>
-                <button class="add-to-cart" data-product-id="${
-                  product.id
-                }" aria-label="Add ${product.name} to cart">
-                  <span class="btn-text">Add to Cart</span>
-                  <span class="btn-spinner" style="display:none;"></span>
-                </button>
-              </div>
-            </div>
-          `
-      )
-      .join("");
-
-    // Attach event listeners to all add-to-cart buttons
-    document.querySelectorAll(".add-to-cart").forEach((btn) => {
-      btn.addEventListener("click", async function (e) {
-        const productId = parseInt(this.getAttribute("data-product-id"));
-        if (isNaN(productId)) return;
-
-        // Disable button and show loading
-        this.disabled = true;
-        this.classList.add("loading");
-        const btnText = this.querySelector(".btn-text");
-        const btnSpinner = this.querySelector(".btn-spinner");
-
-        if (btnText) btnText.style.display = "none";
-        if (btnSpinner) {
-          btnSpinner.style.display = "inline-block";
-          btnSpinner.innerHTML = '<span class="spinner"></span>';
-        }
-
-        try {
-          await addToCart(productId);
-        } finally {
-          // Re-enable button and hide loading
-          this.disabled = false;
-          this.classList.remove("loading");
-          if (btnText) btnText.style.display = "inline";
-          if (btnSpinner) btnSpinner.style.display = "none";
-        }
-      });
-    });
-  } catch (error) {
-    console.error("Error rendering products:", error);
-    const productsGrid = document.getElementById("productsGrid");
-    if (productsGrid) {
-      productsGrid.innerHTML =
-        '<div class="empty-cart">Error loading products. Please try again later.</div>';
-    }
+  if (filtered.length === 0) {
+    grid.innerHTML =
+      '<div class="empty-cart">No products found in this category.</div>';
+    return;
   }
+
+  grid.innerHTML = filtered
+    .map(
+      (product) => `
+      <div class="product-card" data-product-id="${product.id}">
+        ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ""}
+        <div class="product-image">
+          <i class="${product.icon}" aria-hidden="true"></i>
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">${product.name}</h3>
+          <p class="product-description">${product.description}</p>
+          <div
+            class="product-rating"
+            role="img"
+            aria-label="Rating: ${product.rating} out of 5"
+          >
+            <span class="stars" aria-hidden="true">${renderStars(product.rating)}</span>
+            <span class="rating-text">(${product.reviews} reviews)</span>
+          </div>
+          <div class="product-price">$${product.price.toFixed(2)}</div>
+          <button
+            class="add-to-cart"
+            data-product-id="${product.id}"
+            aria-label="Add ${product.name} to cart"
+          >
+            <span class="btn-text">Add to Cart</span>
+            <span class="btn-spinner" style="display:none;" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    `,
+    )
+    .join("");
+
+  // Attach add-to-cart listeners
+  grid.querySelectorAll(".add-to-cart").forEach((btn) => {
+    btn.addEventListener("click", async function () {
+      const productId = parseInt(this.dataset.productId, 10);
+      if (isNaN(productId)) return;
+
+      // Show loading state
+      this.disabled = true;
+      this.classList.add("loading");
+      const btnText = this.querySelector(".btn-text");
+      const btnSpinner = this.querySelector(".btn-spinner");
+      if (btnText) btnText.style.display = "none";
+      if (btnSpinner) {
+        btnSpinner.style.display = "inline-block";
+        btnSpinner.innerHTML = '<span class="spinner"></span>';
+      }
+
+      try {
+        // Simulate a brief async delay (e.g., future API call)
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        addToCart(productId);
+      } finally {
+        this.disabled = false;
+        this.classList.remove("loading");
+        if (btnText) btnText.style.display = "inline";
+        if (btnSpinner) btnSpinner.style.display = "none";
+      }
+    });
+  });
 }
 
-// Filter products by category
+/** Convert a numeric rating into star characters */
+function renderStars(rating) {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5 ? "½" : "";
+  return "★".repeat(full) + half;
+}
+
+// ── Filter products ───────────────────────────────────────────────
 function filterProducts(category) {
   currentCategory = category;
 
-  // Update active tab
   document.querySelectorAll(".filter-tab").forEach((tab) => {
-    const text = tab.textContent.toLowerCase();
-    const isActive =
-      (category === "all" && text.includes("all")) ||
-      (category === "mobile" && text.includes("smartphone")) ||
-      (category !== "all" && text.includes(category));
-
+    const isActive = tab.dataset.category === category;
     tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-selected", isActive ? "true" : "false");
   });
 
   renderProducts();
 }
 
-// Cart functions
+// ── Cart ─────────────────────────────────────────────────────────
 function toggleCart() {
-  try {
-    const cartSidebar = document.getElementById("cartSidebar");
-    const cartOverlay = document.getElementById("cartOverlay");
-    if (!cartSidebar || !cartOverlay) return;
+  const sidebar = document.getElementById("cartSidebar");
+  const overlay = document.getElementById("cartOverlay");
+  if (!sidebar || !overlay) return;
 
-    cartSidebar.classList.toggle("open");
-    cartOverlay.classList.toggle("active");
-    updateScrollLock();
+  const isOpen = sidebar.classList.toggle("open");
+  overlay.classList.toggle("active", isOpen);
+  syncScrollLock();
 
-    if (cartSidebar.classList.contains("open")) {
-      updateCart();
-    }
-  } catch (error) {
-    console.error("Error toggling cart:", error);
-    showNotification("Error opening cart", "error");
-  }
+  if (isOpen) updateCart();
 }
 
-async function addToCart(productId) {
-  try {
-    const product = products.find((p) => p.id === productId);
-    if (!product) {
-      showNotification("Product not found", "error");
-      return;
-    }
-
-    const existingItem = cart.find((item) => item.id === productId);
-
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      cart.push({ ...product, quantity: 1 });
-    }
-
-    await updateCart();
-    showNotification(`${product.name} added to cart!`);
-  } catch (error) {
-    console.error("Error adding to cart:", error);
-    showNotification("Error adding to cart", "error");
+function addToCart(productId) {
+  const product = products.find((p) => p.id === productId);
+  if (!product) {
+    showNotification("Product not found.", "error");
+    return;
   }
+
+  const existing = cart.find((item) => item.id === productId);
+  if (existing) {
+    existing.quantity++;
+  } else {
+    cart.push({ ...product, quantity: 1 });
+  }
+
+  updateCart();
+  showNotification(`${product.name} added to cart!`);
 }
 
-async function updateCart() {
-  try {
-    const cartItems = document.getElementById("cartItems");
-    const cartTotal = document.getElementById("cartTotal");
+function updateCart() {
+  const cartItemsEl = document.getElementById("cartItems");
+  const cartTotalEl = document.getElementById("cartTotal");
+  if (!cartItemsEl || !cartTotalEl) return;
 
-    if (!cartItems || !cartTotal) {
-      console.error("Cart elements not found");
-      return;
-    }
-
-    if (cart.length === 0) {
-      cartItems.innerHTML = '<div class="empty-cart">Your cart is empty</div>';
-    } else {
-      cartItems.innerHTML = cart
-        .map(
-          (item) => `
-              <div class="cart-item">
-                <div class="cart-item-image">
-                  <i class="${item.icon}"></i>
-                </div>
-                <div class="cart-item-info">
-                  <div class="cart-item-name">${item.name}</div>
-                  <div class="cart-item-price">$${item.price.toFixed(2)}</div>
-                  <div class="quantity-controls">
-                    <button class="quantity-btn" onclick="updateQuantity(${
-                      item.id
-                    }, ${
-            item.quantity - 1
-          })" aria-label="Decrease quantity">-</button>
-                    <span class="quantity">${item.quantity}</span>
-                    <button class="quantity-btn" onclick="updateQuantity(${
-                      item.id
-                    }, ${
-            item.quantity + 1
-          })" aria-label="Increase quantity">+</button>
-                  </div>
-                </div>
-              </div>
-            `
-        )
-        .join("");
-    }
-
-    const total = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    cartTotal.textContent = total.toFixed(2);
-    updateCartCount();
-  } catch (error) {
-    console.error("Error updating cart:", error);
-    showNotification("Error updating cart", "error");
+  if (cart.length === 0) {
+    cartItemsEl.innerHTML = '<div class="empty-cart">Your cart is empty.</div>';
+  } else {
+    cartItemsEl.innerHTML = cart
+      .map(
+        (item) => `
+        <div class="cart-item">
+          <div class="cart-item-image">
+            <i class="${item.icon}" aria-hidden="true"></i>
+          </div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+            <div class="quantity-controls">
+              <button
+                class="quantity-btn"
+                onclick="updateQuantity(${item.id}, ${item.quantity - 1})"
+                aria-label="Decrease quantity of ${item.name}"
+              >−</button>
+              <span class="quantity" aria-live="polite">${item.quantity}</span>
+              <button
+                class="quantity-btn"
+                onclick="updateQuantity(${item.id}, ${item.quantity + 1})"
+                aria-label="Increase quantity of ${item.name}"
+              >+</button>
+            </div>
+          </div>
+        </div>
+      `,
+      )
+      .join("");
   }
+
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  cartTotalEl.textContent = total.toFixed(2);
+
+  updateCartCount();
+  attachCheckoutListener();
 }
 
 function updateQuantity(productId, newQuantity) {
-  try {
-    if (newQuantity < 1) {
-      cart = cart.filter((item) => item.id !== productId);
-    } else {
-      const item = cart.find((item) => item.id === productId);
-      if (item) item.quantity = newQuantity;
-    }
-    updateCart();
-  } catch (error) {
-    console.error("Error updating quantity:", error);
-    showNotification("Error updating quantity", "error");
+  if (newQuantity < 1) {
+    cart = cart.filter((item) => item.id !== productId);
+  } else {
+    const item = cart.find((item) => item.id === productId);
+    if (item) item.quantity = newQuantity;
   }
+  updateCart();
 }
 
 function updateCartCount() {
-  try {
-    const cartCount = document.getElementById("cartCount");
-    if (!cartCount) {
-      console.error("Cart count element not found");
-      return;
-    }
-    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCount.textContent = count;
-  } catch (error) {
-    console.error("Error updating cart count:", error);
-  }
+  const cartCount = document.getElementById("cartCount");
+  if (!cartCount) return;
+  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+  cartCount.textContent = count;
+}
+
+function attachCheckoutListener() {
+  const btn = document.querySelector(".checkout-btn");
+  if (!btn) return;
+  // Remove then re-add to avoid stacking duplicate listeners
+  btn.removeEventListener("click", checkout);
+  btn.addEventListener("click", checkout);
 }
 
 function checkout() {
-  try {
-    if (cart.length === 0) {
-      showNotification("Your cart is empty!", "error");
-      return;
-    }
-
-    const total = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    showNotification(
-      `Order total: $${total.toFixed(2)}. Thank you for your purchase!`
-    );
-    cart = [];
-    updateCart();
-  } catch (error) {
-    console.error("Error processing checkout:", error);
-    showNotification("Error processing checkout", "error");
+  if (cart.length === 0) {
+    showNotification("Your cart is empty!", "error");
+    return;
   }
+
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  showNotification(
+    `Order total: $${total.toFixed(2)}. Thank you for your purchase!`,
+  );
+
+  cart = [];
+  updateCart();
+  // Close the cart sidebar after successful checkout
+  const sidebar = document.getElementById("cartSidebar");
+  const overlay = document.getElementById("cartOverlay");
+  if (sidebar) sidebar.classList.remove("open");
+  if (overlay) overlay.classList.remove("active");
+  syncScrollLock();
 }
 
-// Newsletter subscription
-function subscribeNewsletter(event) {
-  try {
-    event.preventDefault();
-    const emailInput = event.target.querySelector('input[type="email"]');
-    if (!emailInput) {
-      console.error("Email input not found");
-      return;
-    }
+// ── Newsletter ────────────────────────────────────────────────────
+function initNewsletter() {
+  const form = document.getElementById("newsletterForm");
+  if (!form) return;
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const emailInput = form.querySelector('input[type="email"]');
+    if (!emailInput) return;
 
     const email = emailInput.value.trim();
-    if (!email || !email.includes("@")) {
-      showNotification("Please enter a valid email address", "error");
+    // Basic RFC-ish check
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showNotification("Please enter a valid email address.", "error");
       return;
     }
 
     showNotification("Thank you for subscribing!");
-    event.target.reset();
-  } catch (error) {
-    console.error("Error subscribing to newsletter:", error);
-    showNotification("Error subscribing to newsletter", "error");
-  }
+    form.reset();
+  });
 }
 
-// Notification system
+// ── Notifications ─────────────────────────────────────────────────
 function showNotification(message, type = "success") {
-  try {
-    const notification = document.getElementById("notification");
-    if (!notification) {
-      console.error("Notification element not found");
-      return;
-    }
+  const el = document.getElementById("notification");
+  if (!el) return;
 
-    notification.textContent = message;
-    notification.style.background =
-      type === "success"
-        ? "linear-gradient(45deg, #00b894, #00cec9)"
-        : "linear-gradient(45deg, #ff4757, #ff6b81)";
+  el.textContent = message;
+  el.style.background =
+    type === "success"
+      ? "linear-gradient(45deg, #00b894, #00cec9)"
+      : "linear-gradient(45deg, #ff4757, #ff6b81)";
 
-    notification.classList.add("show");
-    setTimeout(() => {
-      notification.classList.remove("show");
-    }, 3000);
-  } catch (error) {
-    console.error("Error showing notification:", error);
-  }
+  el.classList.add("show");
+
+  clearTimeout(notificationTimeout);
+  notificationTimeout = setTimeout(() => el.classList.remove("show"), 3500);
 }
 
-// Search functionality
+// ── Search ────────────────────────────────────────────────────────
 function initializeSearch() {
   const searchInput = document.getElementById("searchInput");
   const searchContainer = document.querySelector(".search-container");
-
   if (!searchInput || !searchContainer) return;
 
-  // Create search results element
-  const searchResults = document.createElement("div");
-  searchResults.className = "search-results";
-  searchContainer.appendChild(searchResults);
+  // Inject results dropdown
+  const resultsEl = document.createElement("div");
+  resultsEl.className = "search-results";
+  resultsEl.setAttribute("role", "listbox");
+  searchContainer.appendChild(resultsEl);
 
-  // Add accessibility attributes to search input
-  searchInput.setAttribute("aria-label", "Search products");
-  searchInput.setAttribute("role", "searchbox");
-
-  // Add event listeners
   searchInput.addEventListener("input", (e) => {
-    performSearch(e.target.value, searchResults);
+    debouncedSearch(e.target.value, resultsEl);
   });
 
-  // Close search results when clicking outside
+  // Close dropdown when clicking outside search area
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".search-container")) {
-      searchResults.classList.remove("active");
+      resultsEl.classList.remove("active");
     }
+  });
+
+  // Also close on Escape
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") resultsEl.classList.remove("active");
   });
 }
 
-let searchTimeout;
-function debounce(func, wait) {
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(searchTimeout);
-      func(...args);
-    };
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(later, wait);
-  };
-}
-
-const performSearch = debounce(async (searchTerm, searchResults) => {
-  try {
-    if (!searchTerm.trim()) {
-      searchResults.classList.remove("active");
-      return;
-    }
-
-    searchResults.innerHTML = '<div class="search-loading">Searching...</div>';
-    searchResults.classList.add("active");
-
-    const filteredProducts = products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    if (filteredProducts.length === 0) {
-      searchResults.innerHTML =
-        '<div class="no-results">No products found</div>';
-      return;
-    }
-
-    searchResults.innerHTML = filteredProducts
-      .map(
-        (product) => `
-            <div class="search-result-item" onclick="navigateToProduct(${
-              product.id
-            })">
-              <div class="product-name">${product.name}</div>
-              <div class="product-price">$${product.price.toFixed(2)}</div>
-            </div>
-          `
-      )
-      .join("");
-  } catch (error) {
-    console.error("Error searching products:", error);
-    searchResults.innerHTML =
-      '<div class="no-results">Error searching products</div>';
+// Making performSearch async inside a debounce caused the returned
+// promise to be discarded silently. Keep it synchronous here.
+const debouncedSearch = debounce((searchTerm, resultsEl) => {
+  if (!searchTerm.trim()) {
+    resultsEl.classList.remove("active");
+    return;
   }
+
+  resultsEl.innerHTML = '<div class="search-loading">Searching…</div>';
+  resultsEl.classList.add("active");
+
+  const term = searchTerm.toLowerCase();
+  const matched = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(term) ||
+      p.description.toLowerCase().includes(term),
+  );
+
+  if (matched.length === 0) {
+    resultsEl.innerHTML = '<div class="no-results">No products found.</div>';
+    return;
+  }
+
+  resultsEl.innerHTML = matched
+    .map(
+      (p) => `
+      <div
+        class="search-result-item"
+        role="option"
+        tabindex="0"
+        onclick="navigateToProduct(${p.id})"
+        onkeydown="if(event.key==='Enter') navigateToProduct(${p.id})"
+      >
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">$${p.price.toFixed(2)}</div>
+      </div>
+    `,
+    )
+    .join("");
 }, 300);
 
 function navigateToProduct(productId) {
-  const product = products.find((p) => p.id === productId);
-  if (product) {
-    // Navigate to products section
-    const productsLink = document.querySelector('a[href="#products"]');
-    if (productsLink) productsLink.click();
-
-    // Highlight the product
-    setTimeout(() => {
-      const productElement = document.querySelector(
-        `[data-product-id="${productId}"]`
-      );
-      if (productElement) {
-        productElement.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-        productElement.classList.add("highlight");
-        setTimeout(() => productElement.classList.remove("highlight"), 2000);
-      }
-    }, 100);
-  }
-
-  // Close search results
-  const searchResults = document.querySelector(".search-results");
+  // Close search dropdown
+  const resultsEl = document.querySelector(".search-results");
   const searchInput = document.getElementById("searchInput");
-  if (searchResults) searchResults.classList.remove("active");
+  if (resultsEl) resultsEl.classList.remove("active");
   if (searchInput) searchInput.value = "";
+
+  // Switch to "all" category so the product is visible
+  if (currentCategory !== "all") filterProducts("all");
+
+  // Scroll to the product card after the DOM has updated
+  setTimeout(() => {
+    const card = document.querySelector(`[data-product-id="${productId}"]`);
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.add("highlight");
+    setTimeout(() => card.classList.remove("highlight"), 2000);
+  }, 200);
 }
 
-// Mobile menu toggle
+// ── Mobile menu ───────────────────────────────────────────────────
 function toggleMobileMenu() {
   const navLinks = document.querySelector(".nav-links");
   const overlay = document.getElementById("mobileMenuOverlay");
+  const btn = document.querySelector(".mobile-menu-btn");
 
-  if (navLinks) navLinks.classList.toggle("active");
-  if (overlay) overlay.classList.toggle("active");
+  const isOpen = navLinks.classList.toggle("active");
+  if (overlay) overlay.classList.toggle("active", isOpen);
+  if (btn) btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
 
-  updateScrollLock();
+  syncScrollLock();
 }
 
-// Centralized scroll lock logic
-function updateScrollLock() {
+function closeMobileMenu() {
+  const navLinks = document.querySelector(".nav-links");
+  const overlay = document.getElementById("mobileMenuOverlay");
+  const btn = document.querySelector(".mobile-menu-btn");
+
+  if (!navLinks || !navLinks.classList.contains("active")) return;
+
+  navLinks.classList.remove("active");
+  if (overlay) overlay.classList.remove("active");
+  if (btn) btn.setAttribute("aria-expanded", "false");
+
+  syncScrollLock();
+}
+
+// ── Scroll helpers ────────────────────────────────────────────────
+function syncScrollLock() {
   const navLinks = document.querySelector(".nav-links");
   const cartSidebar = document.getElementById("cartSidebar");
-  const body = document.body;
 
-  const mobileMenuOpen = navLinks && navLinks.classList.contains("active");
+  const menuOpen = navLinks && navLinks.classList.contains("active");
   const cartOpen = cartSidebar && cartSidebar.classList.contains("open");
 
-  body.style.overflow = cartOpen || mobileMenuOpen ? "hidden" : "";
+  document.body.style.overflow = menuOpen || cartOpen ? "hidden" : "";
 }
 
-// Global fallback: always release scroll lock if no overlay/menu is open
-function globalScrollLockFallback() {
-  setTimeout(() => {
-    const navLinks = document.querySelector(".nav-links");
-    const cartSidebar = document.getElementById("cartSidebar");
-    const mobileMenuOpen = navLinks && navLinks.classList.contains("active");
-    const cartOpen = cartSidebar && cartSidebar.classList.contains("open");
+function updateActiveNavLink() {
+  const sections = document.querySelectorAll("section[id]");
+  const scrollY = window.pageYOffset;
+  const header = document.querySelector("header");
+  const headerHeight = header ? header.offsetHeight : 0;
 
-    if (!cartOpen && !mobileMenuOpen) {
-      document.body.style.overflow = "";
+  sections.forEach((section) => {
+    const top = section.offsetTop - headerHeight - 10;
+    const bottom = top + section.offsetHeight;
+    const id = section.getAttribute("id");
+
+    if (scrollY >= top && scrollY < bottom) {
+      document.querySelectorAll(".nav-links a").forEach((link) => {
+        const matches = link.getAttribute("href") === `#${id}`;
+        link.classList.toggle("active", matches);
+      });
     }
-  }, 100);
+  });
 }
 
-// Utility functions for loading states
+// ── Loading helpers ───────────────────────────────────────────────
 function showLoading(element) {
   if (!element) return;
-  element.innerHTML =
-    '<div class="loading-spinner" style="text-align:center;padding:2em;"><span class="spinner"></span></div>';
+  element.classList.add("loading");
 }
 
 function hideLoading(element) {
-  // Loading spinner is automatically removed when content is updated
+  if (!element) return;
+  element.classList.remove("loading");
+}
+
+// ── Utility: debounce ─────────────────────────────────────────────
+function debounce(fn, wait) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), wait);
+  };
 }
