@@ -60,6 +60,13 @@ techstore/
 
 ```bash
 # Clone or download the repo, then just open the file
+
+# Clone the repository
+
+git clone https://github.com/yasirrajput4/ecommerce-frontend-techstore.git
+
+cd ecommerce-frontend-techstore
+
 open html/index.html
 ```
 
