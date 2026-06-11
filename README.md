@@ -139,7 +139,7 @@ Each `<section>` starts at `opacity: 0; transform: translateY(20px)` and transit
 
 ## 📄 License
 
-MIT — free to use, modify, and distribute.
+Open-source under the [MIT License](LICENSE).
 
 ---
 
