@@ -40,7 +40,7 @@ A fully responsive, production-ready e-commerce front-end for a premium electron
 ## 📁 Project Structure
 
 ```
-techstore/
+ecommerce-frontend-techstore/
 ├── html/
 │   └── index.html      # Markup & page structure
 ├── css/
@@ -48,6 +48,7 @@ techstore/
 ├── js/
 │   └── app.js          # All interactivity (cart, search, filters, nav)
 └── README.md           # This file
+└── LICENSE
 ```
 
 > No build step required. Open `html/index.html` directly in a browser.
