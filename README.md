@@ -1,6 +1,6 @@
 # 🛍️ TechStore — Premium Electronics Store
 
-A fully responsive, production-ready e-commerce front-end for a premium electronics store. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no dependencies beyond Font Awesome.
+A fully responsive, e-commerce front-end for a premium electronics store. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no dependencies beyond Font Awesome.
 
 ---
 
@@ -47,8 +47,8 @@ ecommerce-frontend-techstore/
 │   └── style.css       # All styles, animations, and responsive breakpoints
 ├── js/
 │   └── app.js          # All interactivity (cart, search, filters, nav)
+├── LICENSE
 └── README.md           # This file
-└── LICENSE
 ```
 
 > No build step required. Open `html/index.html` directly in a browser.
