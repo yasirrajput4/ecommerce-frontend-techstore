@@ -4,22 +4,15 @@ A fully responsive, e-commerce front-end for a premium electronics store. Built 
 
 ---
 
+## 🌐 Live Demo
+
+**[https://ecommerce-frontend-techstore.netlify.app](https://ecommerce-frontend-techstore.netlify.app/)**
+
+---
+
 ## 📸 Preview
 
-```
-┌─────────────────────────────────────────────────────┐
-│  TechStore        🔍 Search...        🛒 Cart (0)   │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│          Premium Electronics Store                  │
-│    Discover cutting-edge technology...              │
-│              [ Shop Now ]                           │
-│                                                     │
-├──────────┬──────────┬──────────┬────────────────────┤
-│  50K+    │  1000+   │   24/7   │        99%         │
-│ Customers│ Products │ Support  │    Satisfaction    │
-└──────────┴──────────┴──────────┴────────────────────┘
-```
+<img width="1891" height="857" alt="TechStore Screenshot" src="https://github.com/user-attachments/assets/2ccf0d07-06cb-4159-bff4-039294c607df" />
 
 ---
 
@@ -41,17 +34,16 @@ A fully responsive, e-commerce front-end for a premium electronics store. Built 
 
 ```
 ecommerce-frontend-techstore/
-├── html/
-│   └── index.html      # Markup & page structure
+├── index.html           # Markup & page structure
 ├── css/
-│   └── style.css       # All styles, animations, and responsive breakpoints
+│   └── style.css        # All styles, animations, and responsive breakpoints
 ├── js/
-│   └── app.js          # All interactivity (cart, search, filters, nav)
+│   └── app.js            # All interactivity (cart, search, filters, nav)
 ├── LICENSE
-└── README.md           # This file
+└── README.md              # This file
 ```
 
-> No build step required. Open `html/index.html` directly in a browser.
+> No build step required. Open `index.html` directly in a browser.
 
 ---
 
@@ -68,7 +60,7 @@ git clone https://github.com/yasirrajput4/ecommerce-frontend-techstore.git
 
 cd ecommerce-frontend-techstore
 
-open html/index.html
+open index.html
 ```
 
 ### Option 2 — Serve locally (recommended to avoid CORS quirks)
@@ -84,7 +76,7 @@ npx serve .
 # Install the "Live Server" extension, then click "Go Live"
 ```
 
-Then visit `http://localhost:8080/html/index.html` in your browser.
+Then visit `http://localhost:8080/index.html` in your browser.
 
 ---
 
